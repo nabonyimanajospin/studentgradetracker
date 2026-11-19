@@ -14,7 +14,7 @@ the system instantly shows each student's average and whether they **Passed** or
 
 | ID | Requirement | What the system does |
 |---|---|---|
-| FR1 | User Access (Login and Registration) | A new user registers with a username and password. Only registered users can log in. Wrong details show *"Wrong username or password."* |
+| FR1 | User Access (Login and Registration) | A teacher or administrator creates a **staff account** (full name, username, password). Only registered staff can log in. Wrong details show *"Wrong username or password."* |
 | FR2 | Student Registration | Add a student with **Name**, **Student ID** and **Course/Class**. No field can be empty and the Student ID must be unique. |
 | FR3 | Grade Entry | Choose a student and a subject, then enter a mark from **0 to 100**. Marks outside this range are rejected. Entering a new mark for the same subject replaces the old one. |
 | FR4 | Average and Pass/Fail | The system calculates the student's average automatically. **50 or more = Passed**, below 50 = Failed. |
@@ -22,7 +22,8 @@ the system instantly shows each student's average and whether they **Passed** or
 
 ## Main screens
 
-- **Login / Register:** sign in or create an account
+- **Login / Create Staff Account:** teachers sign in or create their account
+  (students do not log in; they are records added by teachers)
 - **Dashboard:** menu, plus totals of students who passed, failed or have no marks yet
 - **Register Student:** add a new student and choose their course
 - **Enter Grades:** enter marks; see every subject, the average and the result
@@ -38,7 +39,7 @@ You need **PostgreSQL** and **Visual Studio 2022 or newer** (with ".NET desktop 
 1. Open `Models/Database.cs` and set your PostgreSQL password in the connection string
    (it is currently `jospin123`).
 2. Open `StudentGradeTracker.sln` in Visual Studio and press **F5**.
-3. Click **Register** to create an account, then log in.
+3. Click **Create a staff account**, then log in. Add students with **Register New Student**.
 
 The app creates the database `grade_tracker_db` and its tables automatically on first start.
 
@@ -57,6 +58,6 @@ The **Views** (forms) only talk to the **Controllers**, and only the **Models** 
 
 | Table | Stores |
 |---|---|
-| `users` | accounts (passwords are saved as secure hashes, never as plain text) |
+| `users` | staff accounts: full name, username, password (saved as a secure hash, never as plain text) |
 | `students` | student ID, name and course |
 | `grades` | each student's mark per subject (0–100) |

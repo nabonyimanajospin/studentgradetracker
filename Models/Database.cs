@@ -74,9 +74,12 @@ namespace StudentGradeTracker.Models
         {
             string sql =
                 "CREATE TABLE IF NOT EXISTS users (" +
-                "  id       SERIAL PRIMARY KEY," +
-                "  username VARCHAR(50)  UNIQUE NOT NULL," +
-                "  password VARCHAR(100) NOT NULL);" +
+                "  id        SERIAL PRIMARY KEY," +
+                "  username  VARCHAR(50)  UNIQUE NOT NULL," +
+                "  password  VARCHAR(100) NOT NULL," +
+                "  full_name VARCHAR(100) NOT NULL DEFAULT '');" +
+                // databases made by an older version of the app get the new column too
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(100) NOT NULL DEFAULT '';" +
 
                 "CREATE TABLE IF NOT EXISTS students (" +
                 "  student_id VARCHAR(30)  PRIMARY KEY," +
@@ -118,18 +121,34 @@ namespace StudentGradeTracker.Models
             }
         }
 
-        // Saves a new user account (passwordHash comes from PasswordHasher.Hash).
-        public static void AddUser(string username, string passwordHash)
+        // Saves a new staff account (passwordHash comes from PasswordHasher.Hash).
+        public static void AddUser(string fullName, string username, string passwordHash)
         {
             using (NpgsqlConnection conn = GetConnection())
             {
                 conn.Open();
-                string sql = "INSERT INTO users (username, password) VALUES (@u, @p)";
+                string sql = "INSERT INTO users (full_name, username, password) VALUES (@n, @u, @p)";
                 using (NpgsqlCommand cmd = new NpgsqlCommand(sql, conn))
                 {
+                    cmd.Parameters.AddWithValue("@n", fullName);
                     cmd.Parameters.AddWithValue("@u", username);
                     cmd.Parameters.AddWithValue("@p", passwordHash);
                     cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // Returns the full name of a user ("" if none was saved).
+        public static string GetFullName(string username)
+        {
+            using (NpgsqlConnection conn = GetConnection())
+            {
+                conn.Open();
+                string sql = "SELECT full_name FROM users WHERE LOWER(username) = LOWER(@u)";
+                using (NpgsqlCommand cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@u", username);
+                    return (cmd.ExecuteScalar() as string) ?? "";
                 }
             }
         }

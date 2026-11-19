@@ -5,12 +5,14 @@ using StudentGradeTracker.Controllers;
 
 namespace StudentGradeTracker.Views
 {
-    // FR1 - User Access: create a new account
+    // FR1 - User Access: create a staff account (teacher or administrator)
     public partial class RegisterForm : Form
     {
         Panel   pnlCard     = new Panel();
         Label   lblTitle    = new Label();
         Label   lblSubtitle = new Label();
+        Label   lblFullName = new Label();
+        TextBox txtFullName = new TextBox();
         Label   lblUsername = new Label();
         Label   lblPassword = new Label();
         Label   lblConfirm  = new Label();
@@ -28,19 +30,20 @@ namespace StudentGradeTracker.Views
         {
             InitializeComponent();
 
+            txtFullName.MaxLength = AuthController.MaxFullNameLength;
             txtUsername.MaxLength = AuthController.MaxUsernameLength;
             txtPassword.MaxLength = AuthController.MaxPasswordLength;
             txtConfirm.MaxLength  = AuthController.MaxPasswordLength;
 
-            this.Text            = "Student Grade Tracker – Register";
-            this.ClientSize      = new Size(420, 560);
+            this.Text            = "Student Grade Tracker – Create Staff Account";
+            this.ClientSize      = new Size(420, 600);
             this.StartPosition   = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox     = false;
             this.BackColor       = Theme.Bg;
             this.Font            = new Font("Segoe UI", 9.5f);
 
-            pnlCard.Size      = new Size(360, 490);
+            pnlCard.Size      = new Size(360, 530);
             pnlCard.Location  = new Point(30, 35);
             pnlCard.BackColor = Color.White;
             pnlCard.Paint    += (s, e) =>
@@ -50,7 +53,7 @@ namespace StudentGradeTracker.Views
                     e.Graphics.DrawRectangle(pen, new Rectangle(0, 0, p.Width-1, p.Height-1));
             };
 
-            lblTitle.Text      = "Create Account";
+            lblTitle.Text      = "Create Staff Account";
             lblTitle.Font      = new Font("Segoe UI", 15, FontStyle.Bold);
             lblTitle.ForeColor = Theme.Primary;
             lblTitle.AutoSize  = false;
@@ -58,44 +61,38 @@ namespace StudentGradeTracker.Views
             lblTitle.Location  = new Point(20, 25);
             lblTitle.TextAlign = ContentAlignment.MiddleCenter;
 
-            lblSubtitle.Text      = "Fill in the details below to register";
-            lblSubtitle.Font      = new Font("Segoe UI", 9f);
+            lblSubtitle.Text      = "For teachers and administrators.\nStudents are added from the Dashboard after you log in.";
+            lblSubtitle.Font      = new Font("Segoe UI", 8.5f);
             lblSubtitle.ForeColor = Theme.Muted;
             lblSubtitle.AutoSize  = false;
-            lblSubtitle.Size      = new Size(320, 20);
+            lblSubtitle.Size      = new Size(320, 36);
             lblSubtitle.Location  = new Point(20, 59);
             lblSubtitle.TextAlign = ContentAlignment.MiddleCenter;
 
+            // full name
+            MakeLabel(lblFullName, "Full Name", 108);
+            StyleTB(txtFullName);
+            txtFullName.Location        = new Point(30, 128);
+            txtFullName.PlaceholderText = "e.g. Jean Mugisha";
+
             // username
-            lblUsername.Text      = "Username";
-            lblUsername.ForeColor = Theme.Text;
-            lblUsername.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
-            lblUsername.AutoSize  = true;
-            lblUsername.Location  = new Point(30, 100);
+            MakeLabel(lblUsername, "Username", 176);
             StyleTB(txtUsername);
-            txtUsername.Location        = new Point(30, 120);
-            txtUsername.PlaceholderText = "At least 3 characters";
+            txtUsername.Location        = new Point(30, 196);
+            txtUsername.PlaceholderText = "Letters, numbers, . or _  (no spaces)";
 
             // password
-            lblPassword.Text      = "Password";
-            lblPassword.ForeColor = Theme.Text;
-            lblPassword.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
-            lblPassword.AutoSize  = true;
-            lblPassword.Location  = new Point(30, 168);
+            MakeLabel(lblPassword, "Password", 244);
             StyleTB(txtPassword);
-            txtPassword.Location        = new Point(30, 188);
+            txtPassword.Location        = new Point(30, 264);
             txtPassword.PasswordChar    = '●';
             txtPassword.PlaceholderText = "At least 4 characters";
 
             // confirm
-            lblConfirm.Text      = "Confirm Password";
-            lblConfirm.ForeColor = Theme.Text;
-            lblConfirm.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
-            lblConfirm.AutoSize  = true;
-            lblConfirm.Location  = new Point(30, 236);
+            MakeLabel(lblConfirm, "Confirm Password", 312);
             StyleTB(txtConfirm);
-            txtConfirm.Location      = new Point(30, 256);
-            txtConfirm.PasswordChar  = '●';
+            txtConfirm.Location        = new Point(30, 332);
+            txtConfirm.PasswordChar    = '●';
             txtConfirm.PlaceholderText = "Repeat your password";
 
             // status
@@ -103,23 +100,25 @@ namespace StudentGradeTracker.Views
             lblStatus.ForeColor = Theme.Error;
             lblStatus.Font      = new Font("Segoe UI", 9f);
             lblStatus.AutoSize  = false;
-            lblStatus.Size      = new Size(300, 20);
-            lblStatus.Location  = new Point(30, 300);
+            lblStatus.Size      = new Size(300, 36);
+            lblStatus.Location  = new Point(30, 372);
 
-            // register button
+            // create account button
             StylePrimary(btnRegister);
-            btnRegister.Text     = "Register";
-            btnRegister.Location = new Point(30, 328);
+            btnRegister.Text     = "Create Account";
+            btnRegister.Location = new Point(30, 414);
             btnRegister.Click   += btnRegister_Click;
 
             // back button
             StyleSecondary(btnBack);
             btnBack.Text     = "← Back to Login";
-            btnBack.Location = new Point(30, 378);
+            btnBack.Location = new Point(30, 464);
             btnBack.Click   += (s, e) => this.Close();
 
             pnlCard.Controls.Add(lblTitle);
             pnlCard.Controls.Add(lblSubtitle);
+            pnlCard.Controls.Add(lblFullName);
+            pnlCard.Controls.Add(txtFullName);
             pnlCard.Controls.Add(lblUsername);
             pnlCard.Controls.Add(txtUsername);
             pnlCard.Controls.Add(lblPassword);
@@ -139,14 +138,24 @@ namespace StudentGradeTracker.Views
             lblStatus.ForeColor = Theme.Error;
             lblStatus.Text      = "";
 
-            string error = AuthController.Register(txtUsername.Text, txtPassword.Text, txtConfirm.Text);
+            string error = AuthController.Register(txtFullName.Text, txtUsername.Text, txtPassword.Text, txtConfirm.Text);
             if (error != null)
             { lblStatus.Text = "⚠  " + error; return; }
 
             RegisteredUsername = txtUsername.Text.Trim();
-            MessageBox.Show("Account created! You can now log in.", "Registered",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Staff account created for " + txtFullName.Text.Trim() + ".\n\n" +
+                            "Log in with the username \"" + RegisteredUsername + "\".",
+                            "Account created", MessageBoxButtons.OK, MessageBoxIcon.Information);
             this.Close();
+        }
+
+        void MakeLabel(Label lbl, string text, int y)
+        {
+            lbl.Text      = text;
+            lbl.ForeColor = Theme.Text;
+            lbl.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
+            lbl.AutoSize  = true;
+            lbl.Location  = new Point(30, y);
         }
 
         void StyleTB(TextBox tb)

@@ -50,7 +50,7 @@ namespace StudentGradeTracker.Views
             lblAppName.Location  = new Point(20, 28);
             lblAppName.TextAlign = ContentAlignment.MiddleCenter;
 
-            lblSubtitle.Text      = "Sign in to manage student records";
+            lblSubtitle.Text      = "Staff sign in (teachers and administrators)";
             lblSubtitle.Font      = new Font("Segoe UI", 9f);
             lblSubtitle.ForeColor = Theme.Muted;
             lblSubtitle.AutoSize  = false;
@@ -97,7 +97,7 @@ namespace StudentGradeTracker.Views
 
             // ── register link-style button ────────────────────────────────
             StyleSecondaryButton(btnRegister);
-            btnRegister.Text     = "Don't have an account? Register";
+            btnRegister.Text     = "New teacher? Create a staff account";
             btnRegister.Location = new Point(30, 320);
             btnRegister.Click   += btnRegister_Click;
 
@@ -135,7 +135,7 @@ namespace StudentGradeTracker.Views
                 return;
             }
 
-            DashboardForm dashboard = new DashboardForm(username);
+            DashboardForm dashboard = new DashboardForm(AuthController.GetDisplayName(username));
             this.Hide();
             dashboard.ShowDialog();
             lblStatus.Text = "";

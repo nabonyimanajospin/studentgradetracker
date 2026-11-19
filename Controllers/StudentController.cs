@@ -18,6 +18,9 @@ namespace StudentGradeTracker.Controllers
             if (name == "" || id == "" || course == "")
                 return "Please fill in Name, Student ID and Course/Class.";
 
+            if (id.Contains(" "))
+                return "Student ID cannot contain spaces (e.g. STD-001).";
+
             if (id.Length > Student.MaxIdLength)
                 return "Student ID can have at most " + Student.MaxIdLength + " characters.";
 

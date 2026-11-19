@@ -223,7 +223,7 @@ namespace StudentGradeTracker.Views
                 cmbStudent.Items.Add(s.Id + "  –  " + s.Name + "  (" + s.Course + ")");
 
             if (students.Count == 0)
-                cmbStudent.Items.Add("(No students registered yet)");
+                cmbStudent.Items.Add("(No students yet – add them with Register New Student)");
 
             int index = students.FindIndex(st => st.Id == selectId);
             if (index >= 0)
@@ -311,7 +311,7 @@ namespace StudentGradeTracker.Views
             pnlResult.BackColor     = Color.White;
             lblResultText.ForeColor = Theme.Muted;
             lblResultText.Text      = students.Count == 0
-                ? "No students registered yet."
+                ? "No students yet.\nGo back to the Dashboard and use Register New Student."
                 : "Select a student to see their marks.";
         }
 
