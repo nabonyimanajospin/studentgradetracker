@@ -12,8 +12,7 @@ namespace StudentGradeTracker.Models
     //   students  (student_id, name, course)
     //   grades    (id, student_id, subject, mark)
     //
-    // NOTE: passwords are stored as plain text to keep the project simple.
-    // A real system would hash them (e.g. with BCrypt).
+    // Passwords are stored as salted hashes (see PasswordHasher), never as plain text.
     public static class Database
     {
         // Connection string for the local grade-tracker database.
@@ -94,8 +93,8 @@ namespace StudentGradeTracker.Models
             }
         }
 
-        // Saves a new user account.
-        public static void AddUser(string username, string password)
+        // Saves a new user account (passwordHash comes from PasswordHasher.Hash).
+        public static void AddUser(string username, string passwordHash)
         {
             using (NpgsqlConnection conn = GetConnection())
             {
@@ -104,26 +103,40 @@ namespace StudentGradeTracker.Models
                 using (NpgsqlCommand cmd = new NpgsqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@u", username);
-                    cmd.Parameters.AddWithValue("@p", password);
+                    cmd.Parameters.AddWithValue("@p", passwordHash);
                     cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        // Returns true if the username and password match a saved account.
-        // Username check is case-insensitive; password is case-sensitive.
-        public static bool CheckLogin(string username, string password)
+        // Returns the stored password hash of a user, or null if the username does not exist.
+        // The username check is case-insensitive.
+        public static string GetPasswordHash(string username)
         {
             using (NpgsqlConnection conn = GetConnection())
             {
                 conn.Open();
-                string sql = "SELECT COUNT(*) FROM users " +
-                             "WHERE LOWER(username) = LOWER(@u) AND password = @p";
+                string sql = "SELECT password FROM users WHERE LOWER(username) = LOWER(@u)";
                 using (NpgsqlCommand cmd = new NpgsqlCommand(sql, conn))
                 {
                     cmd.Parameters.AddWithValue("@u", username);
-                    cmd.Parameters.AddWithValue("@p", password);
-                    return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+                    return cmd.ExecuteScalar() as string;
+                }
+            }
+        }
+
+        // Replaces the stored password hash of a user.
+        public static void SetPasswordHash(string username, string passwordHash)
+        {
+            using (NpgsqlConnection conn = GetConnection())
+            {
+                conn.Open();
+                string sql = "UPDATE users SET password = @p WHERE LOWER(username) = LOWER(@u)";
+                using (NpgsqlCommand cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@u", username);
+                    cmd.Parameters.AddWithValue("@p", passwordHash);
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
@@ -182,12 +195,13 @@ namespace StudentGradeTracker.Models
                     "SELECT s.student_id, s.name, s.course, g.subject, g.mark " +
                     "FROM students s " +
                     "LEFT JOIN grades g ON g.student_id = s.student_id " +
-                    "WHERE LOWER(s.name) LIKE @search OR LOWER(s.student_id) LIKE @search " +
+                    "WHERE POSITION(LOWER(@search) IN LOWER(s.name)) > 0 " +
+                    "   OR POSITION(LOWER(@search) IN LOWER(s.student_id)) > 0 " +
                     "ORDER BY s.name, g.subject";
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand(sql, conn))
                 {
-                    cmd.Parameters.AddWithValue("@search", "%" + searchText.ToLower() + "%");
+                    cmd.Parameters.AddWithValue("@search", searchText);
 
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -291,6 +305,21 @@ namespace StudentGradeTracker.Models
         }
 
         // Inserts or updates a grade for one subject.
+        // Removes all marks of one student (used when the student's course changes).
+        public static void DeleteGrades(string studentId)
+        {
+            using (NpgsqlConnection conn = GetConnection())
+            {
+                conn.Open();
+                string sql = "DELETE FROM grades WHERE student_id = @id";
+                using (NpgsqlCommand cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", studentId);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         // FR3: a mark for a subject that already has one REPLACES it
         // (PostgreSQL INSERT ... ON CONFLICT DO UPDATE).
         public static void SaveMark(string studentId, string subject, int mark)
