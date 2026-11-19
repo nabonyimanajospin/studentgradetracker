@@ -29,9 +29,10 @@ namespace StudentGradeTracker
             if (Database.TestConnection(out error) == false)
             {
                 MessageBox.Show(
-                    "Cannot connect to the database 'grade_tracker_db'.\n\n" + error +
-                    "\n\nCheck that PostgreSQL is running, the database exists,\n" +
-                    "and the password in Database.cs is correct.",
+                    "Cannot connect to PostgreSQL.\n\n" + error +
+                    "\n\nCheck that PostgreSQL is running on localhost:5432, and that the\n" +
+                    "username and password in Models\\Database.cs (connectionString)\n" +
+                    "match your PostgreSQL installation.",
                     "Database error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;     // stop the program
             }

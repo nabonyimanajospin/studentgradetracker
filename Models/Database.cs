@@ -25,11 +25,36 @@ namespace StudentGradeTracker.Models
             return new NpgsqlConnection(connectionString);
         }
 
-        // Tries to open a connection. Returns false and the error text if it fails.
+        // Creates the database (grade_tracker_db) if it does not exist yet,
+        // so the app works on a new computer with only PostgreSQL installed.
+        static void CreateDatabaseIfMissing()
+        {
+            var builder = new NpgsqlConnectionStringBuilder(connectionString);
+            string dbName = builder.Database;
+            builder.Database = "postgres";   // the default database that always exists
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(builder.ConnectionString))
+            {
+                conn.Open();
+                using (NpgsqlCommand check = new NpgsqlCommand("SELECT 1 FROM pg_database WHERE datname = @name", conn))
+                {
+                    check.Parameters.AddWithValue("@name", dbName);
+                    if (check.ExecuteScalar() != null) return;
+                }
+
+                // A database name cannot be a parameter; it comes from our own connection string above.
+                using (NpgsqlCommand create = new NpgsqlCommand("CREATE DATABASE \"" + dbName + "\"", conn))
+                    create.ExecuteNonQuery();
+            }
+        }
+
+        // Tries to open a connection (creating the database first if needed).
+        // Returns false and the error text if it fails.
         public static bool TestConnection(out string error)
         {
             try
             {
+                CreateDatabaseIfMissing();
                 using (NpgsqlConnection conn = GetConnection())
                 {
                     conn.Open();

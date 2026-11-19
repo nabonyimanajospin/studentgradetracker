@@ -6,15 +6,18 @@ average and Passed/Failed result.
 
 ## How to run
 
-1. **Create the database.** In pgAdmin, create a database named `grade_tracker_db`
-   (or run the first line of [database.sql](database.sql)).
-2. **Check the connection.** [Models/Database.cs](Models/Database.cs) connects to
-   `localhost:5432` as user `postgres` with password `jospin123`.
-   Change the connection string if your PostgreSQL setup is different.
-3. **Run.** Open `StudentGradeTracker.slnx` in Visual Studio 2022
-   (".NET desktop development" workload) and press **F5**.
-   The Npgsql package downloads automatically and the tables are created on first start.
-4. **Register an account** on the login screen, then log in. There is no default login.
+**Requirements:** Windows, PostgreSQL (any recent version) running on `localhost:5432`,
+and Visual Studio 2022 with the ".NET desktop development" workload (or the .NET 8 SDK).
+
+1. **Set your PostgreSQL password.** Open [Models/Database.cs](Models/Database.cs) and check the
+   `connectionString`: it uses user `postgres` with password `jospin123`.
+   Change `Username`/`Password` to match your own PostgreSQL installation.
+2. **Run.** Open `StudentGradeTracker.sln` in Visual Studio and press **F5**
+   (or run `dotnet run` in this folder).
+   The Npgsql package downloads automatically (internet needed the first time).
+   On first start the app **creates the database `grade_tracker_db` and its tables by itself** —
+   nothing has to be created by hand. ([database.sql](database.sql) shows the same tables, for reference.)
+3. **Register an account** on the login screen, then log in. There is no default login.
 
 ## Project structure (MVC)
 
