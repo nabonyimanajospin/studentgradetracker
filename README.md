@@ -1,71 +1,62 @@
 # Student Grade Tracker
 
-A Windows Forms desktop application (C#, .NET 8) with a PostgreSQL database.
-Teachers register, log in, add students, enter marks, and see each student's
-average and Passed/Failed result.
+**Course:** DotNet (.NET)
+**Project type:** Windows Forms desktop application
+**Language / Database:** C# (.NET 8) with PostgreSQL
 
-## How to run
+## About the project
 
-**Requirements:** Windows, PostgreSQL (any recent version) running on `localhost:5432`,
-and Visual Studio 2022 with the ".NET desktop development" workload (or the .NET 8 SDK).
-
-1. **Set your PostgreSQL password.** Open [Models/Database.cs](Models/Database.cs) and check the
-   `connectionString`: it uses user `postgres` with password `jospin123`.
-   Change `Username`/`Password` to match your own PostgreSQL installation.
-2. **Run.** Open `StudentGradeTracker.sln` in Visual Studio and press **F5**
-   (or run `dotnet run` in this folder).
-   The Npgsql package downloads automatically (internet needed the first time).
-   On first start the app **creates the database `grade_tracker_db` and its tables by itself** —
-   nothing has to be created by hand. ([database.sql](database.sql) shows the same tables, for reference.)
-3. **Register an account** on the login screen, then log in. There is no default login.
-
-## Project structure (MVC)
-
-| Layer | Folder | Files | Role |
-|---|---|---|---|
-| Model | `Models/` | `Student.cs`, `Grade.cs`, `Course.cs`, `PasswordHasher.cs`, `Database.cs` | Data classes, average + Passed/Failed, the course list, password hashing, all SQL |
-| Controller | `Controllers/` | `AuthController.cs`, `StudentController.cs`, `GradeController.cs` | Validate input, then call the Model |
-| View | `Views/` | `LoginForm`, `RegisterForm`, `DashboardForm`, `AddStudentForm`, `GradeEntryForm`, `ViewStudentsForm`, `EditStudentForm` | The forms the user sees. They only call Controllers |
-
-Flow: **View** (button click) → **Controller** (checks input) → **Model** (PostgreSQL) → result back to the View.
+Student Grade Tracker helps teachers record and manage student grades in one place
+instead of on paper. A teacher logs in, registers students, enters their marks, and
+the system instantly shows each student's average and whether they **Passed** or **Failed**.
 
 ## Functional requirements
 
-| ID | Requirement | Where |
+| ID | Requirement | What the system does |
 |---|---|---|
-| FR1 | User Access: register with username + password; only registered users can log in; wrong credentials show "Wrong username or password." | `LoginForm`, `RegisterForm` → `AuthController` |
-| FR2 | Student Registration: Name, Student ID and Course/Class are required; Student ID must be unique; the course is chosen from a fixed list | `AddStudentForm` → `StudentController.AddStudent` |
-| FR3 | Grade Entry: choose a student, then one of the subjects of their course, mark 0–100 only; a new mark for the same subject replaces the old one. A table shows every subject of the course with its mark or "–" | `GradeEntryForm` → `GradeController.SaveMark` |
-| FR4 | Average and Pass/Fail: average of all marks; "Passed" if average ≥ 50, otherwise "Failed" | `Student.GetAverage()` / `GetStatus()`, shown in `GradeEntryForm`, `ViewStudentsForm` (green/red rows) and the Dashboard counts |
-| FR5 | Record Management (CRUD): view all students with marks and result, search by name or ID, edit name/course, delete after confirmation | `ViewStudentsForm`, `EditStudentForm` → `StudentController` |
+| FR1 | User Access (Login and Registration) | A new user registers with a username and password. Only registered users can log in. Wrong details show *"Wrong username or password."* |
+| FR2 | Student Registration | Add a student with **Name**, **Student ID** and **Course/Class**. No field can be empty and the Student ID must be unique. |
+| FR3 | Grade Entry | Choose a student and a subject, then enter a mark from **0 to 100**. Marks outside this range are rejected. Entering a new mark for the same subject replaces the old one. |
+| FR4 | Average and Pass/Fail | The system calculates the student's average automatically. **50 or more = Passed**, below 50 = Failed. |
+| FR5 | Record Management (CRUD) | View all students with their marks and results, search by name or ID, edit a student's name or course, and delete a student after confirmation. |
 
-## Courses and subjects
+## Main screens
 
-Courses are fixed, and each course has its own subjects. Edit [Models/Course.cs](Models/Course.cs) to change them.
+- **Login / Register:** sign in or create an account
+- **Dashboard:** menu, plus totals of students who passed, failed or have no marks yet
+- **Register Student:** add a new student and choose their course
+- **Enter Grades:** enter marks; see every subject, the average and the result
+- **View Records:** list, search, edit and delete students
 
-| Course | Subjects |
+Each course has its own subjects (for example, *DotNet Programming*: C# Programming,
+Windows Forms, Databases (SQL), Mathematics, English). The list is in `Models/Course.cs`.
+
+## How to run
+
+You need **PostgreSQL** and **Visual Studio 2022 or newer** (with ".NET desktop development").
+
+1. Open `Models/Database.cs` and set your PostgreSQL password in the connection string
+   (it is currently `jospin123`).
+2. Open `StudentGradeTracker.sln` in Visual Studio and press **F5**.
+3. Click **Register** to create an account, then log in.
+
+The app creates the database `grade_tracker_db` and its tables automatically on first start.
+
+## Project structure (MVC)
+
+```
+Models/        Student, Grade, Course, PasswordHasher, Database (all SQL)
+Controllers/   AuthController, StudentController, GradeController (checks and rules)
+Views/         The forms: Login, Register, Dashboard, Add Student,
+               Enter Grades, View Students, Edit Student
+```
+
+The **Views** (forms) only talk to the **Controllers**, and only the **Models** talk to PostgreSQL.
+
+## Database
+
+| Table | Stores |
 |---|---|
-| DotNet Programming | C# Programming, Windows Forms, Databases (SQL), Mathematics, English |
-| Web Development | HTML & CSS, JavaScript, PHP, Databases (SQL), English |
-| Networking | Computer Networks, Network Security, Linux, Mathematics, English |
-| Software Engineering | Programming Fundamentals, Data Structures, Software Design, Databases (SQL), Mathematics |
-| General Studies | Mathematics, Science, English, Kinyarwanda, French, History |
-
-Changing a student's course deletes their old marks (after a confirmation), because the subjects are different.
-
-## Database (`grade_tracker_db`)
-
-| Table | Columns |
-|---|---|
-| `users` | `id`, `username` (unique), `password` |
-| `students` | `student_id` (primary key), `name`, `course` |
-| `grades` | `id`, `student_id` (foreign key, `ON DELETE CASCADE`), `subject`, `mark` (0–100), unique (`student_id`, `subject`) |
-
-## Security and robustness
-
-- Passwords are never stored as plain text: they are saved as salted PBKDF2-SHA256 hashes
-  ([Models/PasswordHasher.cs](Models/PasswordHasher.cs)).
-- All SQL uses parameters (`@name`), so typed text can never change a query (no SQL injection).
-- Input is checked twice: in the Controllers (empty fields, lengths, mark range, course and subject lists)
-  and in the database (primary keys, unique constraints, `CHECK (mark between 0 and 100)`).
-- If PostgreSQL stops while the app is open, the app shows a clear message instead of crashing.
+| `users` | accounts (passwords are saved as secure hashes, never as plain text) |
+| `students` | student ID, name and course |
+| `grades` | each student's mark per subject (0–100) |
