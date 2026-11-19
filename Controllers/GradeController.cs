@@ -7,10 +7,11 @@ namespace StudentGradeTracker.Controllers
     // CONTROLLER for FR3 - Grade Entry (FR4 is calculated by the Student model).
     public static class GradeController
     {
-        public static readonly string[] Subjects =
+        // Subjects of the student's course
+        public static string[] GetSubjects(Student student)
         {
-            "Mathematics", "Science", "English", "Kinyarwanda", "French", "History"
-        };
+            return student == null ? new string[0] : Course.GetSubjects(student.Course);
+        }
 
         public static List<Grade> GetGrades(string studentId)
         {
@@ -19,13 +20,16 @@ namespace StudentGradeTracker.Controllers
 
         // Validates and saves a mark (0-100). An existing mark for the subject is replaced.
         // Returns null on success, or an error message.
-        public static string SaveMark(string studentId, string subject, string markText)
+        public static string SaveMark(Student student, string subject, string markText)
         {
-            if (string.IsNullOrEmpty(studentId))
+            if (student == null)
                 return "Please choose a student. Register students first if the list is empty.";
 
             if (string.IsNullOrEmpty(subject))
                 return "Please choose a subject.";
+
+            if (Array.IndexOf(GetSubjects(student), subject) < 0)
+                return "\"" + subject + "\" is not a subject of " + student.Course + ".";
 
             int mark;
             if (!int.TryParse((markText ?? "").Trim(), out mark))
@@ -36,7 +40,7 @@ namespace StudentGradeTracker.Controllers
 
             try
             {
-                Database.SaveMark(studentId, subject, mark);
+                Database.SaveMark(student.Id, subject, mark);
                 return null;
             }
             catch (Exception ex)

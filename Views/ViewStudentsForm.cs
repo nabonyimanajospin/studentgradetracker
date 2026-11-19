@@ -46,6 +46,7 @@ namespace StudentGradeTracker.Views
             lblTitle.Size      = new Size(860, 40);
             lblTitle.Location  = new Point(20, 15);
             lblTitle.TextAlign = ContentAlignment.MiddleLeft;
+            lblTitle.UseMnemonic = false;   // show "&" as a normal character
             pnlHeader.Controls.Add(lblTitle);
 
             // ── search bar ────────────────────────────────────────────────
@@ -100,10 +101,11 @@ namespace StudentGradeTracker.Views
             listStudents.Font         = new Font("Segoe UI", 9.5f);
             listStudents.Columns.Add("Student ID",    100);
             listStudents.Columns.Add("Name",          160);
-            listStudents.Columns.Add("Course / Class",130);
-            listStudents.Columns.Add("Marks",         270);
+            listStudents.Columns.Add("Course / Class",165);
+            listStudents.Columns.Add("Marks",         235);
             listStudents.Columns.Add("Average",        75);
             listStudents.Columns.Add("Result",         90);
+            listStudents.DoubleClick += btnEdit_Click;   // double-click a row to edit it
 
             // ── count label ───────────────────────────────────────────────
             lblCount.Text      = "";
@@ -174,6 +176,7 @@ namespace StudentGradeTracker.Views
                     : "–";
 
                 ListViewItem item = new ListViewItem(s.Id);
+                item.Tag = s;   // remember which student this row is
                 item.SubItems.Add(s.Name);
                 item.SubItems.Add(s.Course);
                 item.SubItems.Add(marksText);
@@ -204,11 +207,9 @@ namespace StudentGradeTracker.Views
             if (listStudents.SelectedItems.Count == 0)
             { MessageBox.Show("Please select a student to edit.", "No selection", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
-            string id     = listStudents.SelectedItems[0].Text;
-            string name   = listStudents.SelectedItems[0].SubItems[1].Text;
-            string course = listStudents.SelectedItems[0].SubItems[2].Text;
+            Student s = (Student)listStudents.SelectedItems[0].Tag;
 
-            var form = new EditStudentForm(id, name, course);
+            var form = new EditStudentForm(s);
             this.Hide();
             form.ShowDialog();
             this.Show();
@@ -221,20 +222,19 @@ namespace StudentGradeTracker.Views
             if (listStudents.SelectedItems.Count == 0)
             { MessageBox.Show("Please select a student to delete.", "No selection", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
-            string id   = listStudents.SelectedItems[0].Text;
-            string name = listStudents.SelectedItems[0].SubItems[1].Text;
+            Student s = (Student)listStudents.SelectedItems[0].Tag;
 
             DialogResult ans = MessageBox.Show(
                 "Are you sure you want to delete:\n\n" +
-                "  Name:  " + name + "\n" +
-                "  ID:    " + id   + "\n\n" +
+                "  Name:  " + s.Name + "\n" +
+                "  ID:    " + s.Id   + "\n\n" +
                 "All their grades will also be deleted. This cannot be undone.",
                 "Confirm Delete",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
             if (ans != DialogResult.Yes) return;
 
-            string error = StudentController.DeleteStudent(id);
+            string error = StudentController.DeleteStudent(s.Id);
             if (error != null)
             {
                 MessageBox.Show(error, "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

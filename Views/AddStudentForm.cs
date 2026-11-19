@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using StudentGradeTracker.Controllers;
+using StudentGradeTracker.Models;
 
 namespace StudentGradeTracker.Views
 {
@@ -15,7 +16,8 @@ namespace StudentGradeTracker.Views
         Label   lblCourse  = new Label();
         TextBox txtName    = new TextBox();
         TextBox txtId      = new TextBox();
-        TextBox txtCourse  = new TextBox();
+        ComboBox cmbCourse = new ComboBox();
+        Label   lblSubjects = new Label();
         Button  btnSave    = new Button();
         Button  btnBack    = new Button();
         Label   lblStatus  = new Label();
@@ -25,7 +27,7 @@ namespace StudentGradeTracker.Views
             InitializeComponent();
 
             this.Text            = "Register Student";
-            this.ClientSize      = new Size(420, 490);
+            this.ClientSize      = new Size(420, 520);
             this.StartPosition   = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox     = false;
@@ -56,7 +58,23 @@ namespace StudentGradeTracker.Views
 
             // course
             MakeLabel(lblCourse, "Course / Class", 240);
-            MakeTB(txtCourse, 260, "e.g. S3A, Year 2");
+            cmbCourse.Size          = new Size(360, 30);
+            cmbCourse.Location      = new Point(30, 260);
+            cmbCourse.Font          = new Font("Segoe UI", 10f);
+            cmbCourse.BackColor     = Theme.Input;
+            cmbCourse.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbCourse.Items.AddRange(Course.GetAll());
+            cmbCourse.SelectedIndexChanged += (s, e) => ShowSubjects();
+            Theme.BlockMouseWheel(cmbCourse);
+
+            // subjects of the chosen course
+            lblSubjects.Font      = new Font("Segoe UI", 8.5f);
+            lblSubjects.ForeColor = Theme.Muted;
+            lblSubjects.AutoSize  = false;
+            lblSubjects.Size      = new Size(360, 34);
+            lblSubjects.Location  = new Point(30, 292);
+            lblSubjects.UseMnemonic = false;
+            ShowSubjects();
 
             // status label
             lblStatus.Text      = "";
@@ -64,12 +82,12 @@ namespace StudentGradeTracker.Views
             lblStatus.Font      = new Font("Segoe UI", 9f);
             lblStatus.AutoSize  = false;
             lblStatus.Size      = new Size(360, 20);
-            lblStatus.Location  = new Point(30, 308);
+            lblStatus.Location  = new Point(30, 332);
 
             // save button
             btnSave.Text     = "💾  Save Student";
             btnSave.Size     = new Size(360, 40);
-            btnSave.Location = new Point(30, 335);
+            btnSave.Location = new Point(30, 360);
             btnSave.FlatStyle = FlatStyle.Flat;
             btnSave.BackColor = Theme.Green;
             btnSave.ForeColor = Color.White;
@@ -83,7 +101,7 @@ namespace StudentGradeTracker.Views
             // back button
             btnBack.Text     = "← Back to Dashboard";
             btnBack.Size     = new Size(360, 36);
-            btnBack.Location = new Point(30, 385);
+            btnBack.Location = new Point(30, 410);
             btnBack.FlatStyle = FlatStyle.Flat;
             btnBack.BackColor = Color.White;
             btnBack.ForeColor = Theme.Primary;
@@ -101,10 +119,14 @@ namespace StudentGradeTracker.Views
             this.Controls.Add(lblId);
             this.Controls.Add(txtId);
             this.Controls.Add(lblCourse);
-            this.Controls.Add(txtCourse);
+            this.Controls.Add(cmbCourse);
+            this.Controls.Add(lblSubjects);
             this.Controls.Add(lblStatus);
             this.Controls.Add(btnSave);
             this.Controls.Add(btnBack);
+
+            txtName.MaxLength = Student.MaxNameLength;
+            txtId.MaxLength   = Student.MaxIdLength;
 
             this.AcceptButton = btnSave;
         }
@@ -117,20 +139,23 @@ namespace StudentGradeTracker.Views
             string name = txtName.Text.Trim();
             string id   = txtId.Text.Trim();
 
-            string error = StudentController.AddStudent(id, name, txtCourse.Text);
+            string course = cmbCourse.SelectedIndex == -1 ? "" : cmbCourse.Text;
+
+            string error = StudentController.AddStudent(id, name, course);
             if (error != null)
             { lblStatus.Text = "⚠  " + error; return; }
 
             // Ask whether to enter grades now
             DialogResult ans = MessageBox.Show(
-                "✔  Student \"" + name + "\" registered successfully!\n\n" +
+                "✔  Student \"" + name + "\" (ID " + id + ") registered in " + course + ".\n\n" +
+                "Subjects: " + string.Join(", ", Course.GetSubjects(course)) + "\n\n" +
                 "Would you like to enter grades for them now?",
                 "Student Registered",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Information);
 
             txtName.Clear();
             txtId.Clear();
-            txtCourse.Clear();
+            cmbCourse.SelectedIndex = -1;
             txtName.Focus();
             lblStatus.Text = "";
 
@@ -141,6 +166,13 @@ namespace StudentGradeTracker.Views
                 gradeForm.ShowDialog();
                 this.Show();
             }
+        }
+
+        void ShowSubjects()
+        {
+            lblSubjects.Text = cmbCourse.SelectedIndex == -1
+                ? "Choose a course to see its subjects."
+                : "Subjects: " + string.Join(", ", Course.GetSubjects(cmbCourse.Text));
         }
 
         void MakeLabel(Label lbl, string text, int y)

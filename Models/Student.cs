@@ -13,6 +13,10 @@ namespace StudentGradeTracker.Models
         // FR4: predefined pass mark of 50%
         public const int PassMark = 50;
 
+        // Same sizes as the database columns
+        public const int MaxIdLength   = 30;
+        public const int MaxNameLength = 100;
+
         // FR4: average of all marks (0 when no marks have been entered)
         public double GetAverage()
         {

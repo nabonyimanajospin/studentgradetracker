@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace StudentGradeTracker.Views
 {
@@ -20,5 +21,11 @@ namespace StudentGradeTracker.Views
         public static readonly Color Input     = Color.FromArgb(248, 250, 252);
         public static readonly Color Error     = Red;
         public static readonly Color Success   = Green;
+
+        // Stops the mouse wheel from silently changing a dropdown that is not open
+        public static void BlockMouseWheel(ComboBox combo)
+        {
+            combo.MouseWheel += (s, e) => ((HandledMouseEventArgs)e).Handled = !combo.DroppedDown;
+        }
     }
 }

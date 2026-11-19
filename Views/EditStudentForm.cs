@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using StudentGradeTracker.Controllers;
+using StudentGradeTracker.Models;
 
 namespace StudentGradeTracker.Views
 {
@@ -15,17 +16,27 @@ namespace StudentGradeTracker.Views
         Label   lblCourse  = new Label();
         TextBox txtId      = new TextBox();
         TextBox txtName    = new TextBox();
-        TextBox txtCourse  = new TextBox();
+        ComboBox cmbCourse = new ComboBox();
+        Label   lblSubjects = new Label();
         Button  btnUpdate  = new Button();
         Button  btnBack    = new Button();
         Label   lblStatus  = new Label();
 
-        public EditStudentForm(string id, string name, string course)
+        string originalCourse;
+        bool   hasMarks;
+
+        public EditStudentForm(Student student)
         {
             InitializeComponent();
 
+            string id     = student.Id;
+            string name   = student.Name;
+            string course = student.Course;
+            hasMarks      = student.Grades.Count > 0;
+            txtName.MaxLength = Student.MaxNameLength;
+
             this.Text            = "Edit Student";
-            this.ClientSize      = new Size(420, 450);
+            this.ClientSize      = new Size(420, 480);
             this.StartPosition   = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox     = false;
@@ -84,13 +95,25 @@ namespace StudentGradeTracker.Views
             lblCourse.AutoSize  = true;
             lblCourse.Location  = new Point(30, 231);
 
-            txtCourse.Text        = course;
-            txtCourse.Size        = new Size(360, 30);
-            txtCourse.Location    = new Point(30, 251);
-            txtCourse.Font        = new Font("Segoe UI", 10f);
-            txtCourse.BackColor   = Theme.Input;
-            txtCourse.BorderStyle = BorderStyle.FixedSingle;
-            txtCourse.ForeColor   = Theme.Text;
+            originalCourse          = course;
+            cmbCourse.Size          = new Size(360, 30);
+            cmbCourse.Location      = new Point(30, 251);
+            cmbCourse.Font          = new Font("Segoe UI", 10f);
+            cmbCourse.BackColor     = Theme.Input;
+            cmbCourse.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbCourse.Items.AddRange(Course.GetAll());
+            cmbCourse.SelectedItem  = course;   // stays empty if the old course is not in the list
+            cmbCourse.SelectedIndexChanged += (s, e) => ShowSubjects();
+            Theme.BlockMouseWheel(cmbCourse);
+
+            // subjects of the chosen course
+            lblSubjects.Font      = new Font("Segoe UI", 8.5f);
+            lblSubjects.ForeColor = Theme.Muted;
+            lblSubjects.AutoSize  = false;
+            lblSubjects.Size      = new Size(360, 34);
+            lblSubjects.Location  = new Point(30, 283);
+            lblSubjects.UseMnemonic = false;
+            ShowSubjects();
 
             // status
             lblStatus.Text      = "";
@@ -98,12 +121,12 @@ namespace StudentGradeTracker.Views
             lblStatus.Font      = new Font("Segoe UI", 9f);
             lblStatus.AutoSize  = false;
             lblStatus.Size      = new Size(360, 20);
-            lblStatus.Location  = new Point(30, 295);
+            lblStatus.Location  = new Point(30, 322);
 
             // update button
             btnUpdate.Text     = "✔  Update Student";
             btnUpdate.Size     = new Size(360, 40);
-            btnUpdate.Location = new Point(30, 320);
+            btnUpdate.Location = new Point(30, 350);
             btnUpdate.FlatStyle = FlatStyle.Flat;
             btnUpdate.BackColor = Theme.Amber;
             btnUpdate.ForeColor = Color.White;
@@ -117,7 +140,7 @@ namespace StudentGradeTracker.Views
             // cancel button
             btnBack.Text     = "✖  Cancel";
             btnBack.Size     = new Size(360, 36);
-            btnBack.Location = new Point(30, 372);
+            btnBack.Location = new Point(30, 402);
             btnBack.FlatStyle = FlatStyle.Flat;
             btnBack.BackColor = Color.White;
             btnBack.ForeColor = Theme.Primary;
@@ -135,19 +158,41 @@ namespace StudentGradeTracker.Views
             this.Controls.Add(lblName);
             this.Controls.Add(txtName);
             this.Controls.Add(lblCourse);
-            this.Controls.Add(txtCourse);
+            this.Controls.Add(cmbCourse);
+            this.Controls.Add(lblSubjects);
             this.Controls.Add(lblStatus);
             this.Controls.Add(btnUpdate);
             this.Controls.Add(btnBack);
 
-            this.AcceptButton = btnUpdate;
+            this.AcceptButton  = btnUpdate;
+            this.ActiveControl = txtName;
+        }
+
+        void ShowSubjects()
+        {
+            lblSubjects.Text = cmbCourse.SelectedIndex == -1
+                ? "Choose a course to see its subjects."
+                : "Subjects: " + string.Join(", ", Course.GetSubjects(cmbCourse.Text));
         }
 
         void btnUpdate_Click(object sender, EventArgs e)
         {
             lblStatus.ForeColor = Theme.Error;
             lblStatus.Text      = "";
-            string error = StudentController.UpdateStudent(txtId.Text, txtName.Text, txtCourse.Text);
+
+            string course = cmbCourse.SelectedIndex == -1 ? "" : cmbCourse.Text;
+            bool courseChanged = course != "" && course != originalCourse;
+
+            if (courseChanged && hasMarks)
+            {
+                DialogResult ans = MessageBox.Show(
+                    "Changing the course to \"" + course + "\" will delete this student's " +
+                    "existing marks, because the subjects are different.\n\nContinue?",
+                    "Change course", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (ans != DialogResult.Yes) return;
+            }
+
+            string error = StudentController.UpdateStudent(txtId.Text, txtName.Text, course, courseChanged);
             if (error != null)
             { lblStatus.Text = "⚠  " + error; return; }
 
