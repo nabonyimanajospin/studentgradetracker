@@ -21,9 +21,16 @@ namespace StudentGradeTracker.Views
         Button  btnBack     = new Button();
         Label   lblStatus   = new Label();
 
+        // Set after a successful registration, so the Login form can fill in the username
+        public string RegisteredUsername { get; private set; }
+
         public RegisterForm()
         {
             InitializeComponent();
+
+            txtUsername.MaxLength = AuthController.MaxUsernameLength;
+            txtPassword.MaxLength = AuthController.MaxPasswordLength;
+            txtConfirm.MaxLength  = AuthController.MaxPasswordLength;
 
             this.Text            = "Student Grade Tracker – Register";
             this.ClientSize      = new Size(420, 560);
@@ -136,6 +143,7 @@ namespace StudentGradeTracker.Views
             if (error != null)
             { lblStatus.Text = "⚠  " + error; return; }
 
+            RegisteredUsername = txtUsername.Text.Trim();
             MessageBox.Show("Account created! You can now log in.", "Registered",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
             this.Close();

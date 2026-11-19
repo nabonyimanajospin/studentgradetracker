@@ -15,6 +15,15 @@ namespace StudentGradeTracker
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            // Any unexpected error (e.g. PostgreSQL stops while the app is open)
+            // shows a clear message instead of crashing the app.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (s, e) =>
+                MessageBox.Show(
+                    "Something went wrong:\n\n" + e.Exception.Message +
+                    "\n\nCheck that PostgreSQL is running, then try again.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
             // Step 1: can we connect to PostgreSQL?
             string error;
             if (Database.TestConnection(out error) == false)

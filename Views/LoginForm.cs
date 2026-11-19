@@ -113,6 +113,9 @@ namespace StudentGradeTracker.Views
             pnlCard.Controls.Add(btnRegister);
             this.Controls.Add(pnlCard);
 
+            txtUsername.MaxLength = AuthController.MaxUsernameLength;
+            txtPassword.MaxLength = AuthController.MaxPasswordLength;
+
             this.AcceptButton = btnLogin;
         }
 
@@ -146,6 +149,14 @@ namespace StudentGradeTracker.Views
             this.Hide();
             reg.ShowDialog();
             this.Show();
+
+            if (reg.RegisteredUsername != null)
+            {
+                txtUsername.Text = reg.RegisteredUsername;
+                txtPassword.Clear();
+                lblStatus.Text = "";
+                txtPassword.Focus();
+            }
         }
 
         // ── shared style helpers ──────────────────────────────────────────
